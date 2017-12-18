@@ -28,9 +28,12 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -151,6 +154,7 @@ public class ProductListActivity extends AppCompatActivity {
         private final ProductListActivity mParentActivity;
         private final ProductListVm mViewModel;
         private int totalItems = 0;
+        private static final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(C.THREADS_RECYCLER);
 
         private final boolean mTwoPane;
         private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
@@ -201,7 +205,7 @@ public class ProductListActivity extends AppCompatActivity {
             if (productEntity != null) {
 
                 productEntity
-                        .subscribeOn(Schedulers.newThread()) // TODO thread pool
+                        .subscribeOn(Schedulers.from(threadPoolExecutor))
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(new SingleObserver<ProductEntity>() {
                             @Override

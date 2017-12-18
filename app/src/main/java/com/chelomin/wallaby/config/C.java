@@ -9,4 +9,5 @@ public class C {
     public static final String BASE_URL = "https://walmartlabs-test.appspot.com/_ah/api/walmart/v1/";
     public static final int PRODUCTS_PER_PAGE = 10;
     public static final boolean SHOW_DEBUG_INFO = true;
+    public static final int THREADS_RECYCLER = 10;
 }
