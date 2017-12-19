@@ -147,6 +147,12 @@ public class ProductListActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Integer index = (Integer) view.getTag();
+
+                // Check if the item is loaded
+                if (!mViewModel.getPagesCompleted().getValue().contains(index/C.PRODUCTS_PER_PAGE+1)) {
+                    return;
+                }
+
                 if (mTwoPane) {
                     Bundle arguments = new Bundle();
                     arguments.putInt(ProductDetailFragment.ARG_ITEM_ID, index);
