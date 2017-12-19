@@ -1,15 +1,28 @@
 package com.chelomin.wallaby;
 
 import android.app.Activity;
+import android.arch.persistence.room.Room;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.chelomin.wallaby.dummy.DummyContent;
+import com.chelomin.wallaby.room.Db;
+import com.chelomin.wallaby.room.ProductEntity;
+import com.squareup.picasso.Picasso;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * A fragment representing a single ProductDto detail screen.
@@ -27,7 +40,17 @@ public class ProductDetailFragment extends Fragment {
     /**
      * The dummy content this fragment is presenting.
      */
-    private DummyContent.DummyItem mItem;
+    private Integer index;
+    private Db db;
+    private ProductEntity item;
+    private Activity activity;
+    private CollapsingToolbarLayout toolbarLayout;
+
+    @BindView(R.id.product_detail) TextView productDetail;
+    @BindView(R.id.price) TextView price;
+    @BindView(R.id.image) ImageView image;
+
+    private ImageView headerImage;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -41,28 +64,60 @@ public class ProductDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
-            // Load the dummy content specified by the fragment
-            // arguments. In a real-world scenario, use a Loader
-            // to load content from a content provider.
-            mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
+            index = getArguments().getInt(ARG_ITEM_ID);
 
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(mItem.content);
-            }
+            activity = this.getActivity();
+            toolbarLayout = activity.findViewById(R.id.toolbar_layout);
+            headerImage = activity.findViewById(R.id.header_image);
+
+            db = Room.databaseBuilder(Wallaby.getInstance().getApplicationContext(),
+                    Db.class, "cache").build();
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.product_detail, container, false);
+        final View rootView = inflater.inflate(R.layout.product_detail, container, false);
 
-        // Show the dummy content as text in a TextView.
-        if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.product_detail)).setText(mItem.details);
-        }
+        ButterKnife.bind(this, rootView);
+        db.productsDao().loadByIndex(index)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleObserver<ProductEntity>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(ProductEntity productEntity) {
+                        item = productEntity;
+                        if (toolbarLayout != null) {
+                            toolbarLayout.setTitle(item.getProductName());
+                        }
+
+                        if (headerImage != null) {
+                            Picasso.with(activity)
+                                    .load(item.getProductImage())
+                                    .resize(headerImage.getWidth(), headerImage.getHeight())
+//                                    .centerCrop()
+                                    .into(headerImage);
+                        }
+                        productDetail.setText(Html.fromHtml(item.getLongDescription()));
+                        price.setText(item.getPrice());
+
+//                        Picasso.with(activity).load(item.getProductImage()).fit().into(image);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(activity,
+                                "Ooops, Product does not seem to be cached yet...",
+                                Toast.LENGTH_LONG)
+                                .show();
+                    }
+                });
 
         return rootView;
     }

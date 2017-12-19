@@ -147,7 +147,6 @@ public class ProductListVm extends ViewModel {
                 totalItems.setValue(productListDto.totalProducts);
             }
         }.execute();
-
     }
 
     private void cachePageDataSync(ProductListDto productListDto) {
