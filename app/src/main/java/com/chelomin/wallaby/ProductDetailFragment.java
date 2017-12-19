@@ -47,10 +47,9 @@ public class ProductDetailFragment extends Fragment {
     private CollapsingToolbarLayout toolbarLayout;
 
     @BindView(R.id.product_detail) TextView productDetail;
-    @BindView(R.id.price) TextView price;
     @BindView(R.id.image) ImageView image;
 
-    private ImageView headerImage;
+    private TextView price;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -68,7 +67,7 @@ public class ProductDetailFragment extends Fragment {
 
             activity = this.getActivity();
             toolbarLayout = activity.findViewById(R.id.toolbar_layout);
-            headerImage = activity.findViewById(R.id.header_image);
+            price = activity.findViewById(R.id.price);
 
             db = Room.databaseBuilder(Wallaby.getInstance().getApplicationContext(),
                     Db.class, "cache").build();
@@ -97,17 +96,12 @@ public class ProductDetailFragment extends Fragment {
                             toolbarLayout.setTitle(item.getProductName());
                         }
 
-                        if (headerImage != null) {
-                            Picasso.with(activity)
-                                    .load(item.getProductImage())
-                                    .resize(headerImage.getWidth(), headerImage.getHeight())
-//                                    .centerCrop()
-                                    .into(headerImage);
+                        if (price != null) {
+                            price.setText(productEntity.getPrice());
                         }
                         productDetail.setText(Html.fromHtml(item.getLongDescription()));
-                        price.setText(item.getPrice());
 
-//                        Picasso.with(activity).load(item.getProductImage()).fit().into(image);
+                        Picasso.with(activity).load(item.getProductImage()).into(image);
                     }
 
                     @Override
